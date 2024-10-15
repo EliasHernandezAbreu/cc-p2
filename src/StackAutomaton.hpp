@@ -14,6 +14,6 @@ private:
     std::set<char> input_symbols;
     std::set<char> stack_symbols;
     std::string initial_state;
-    char initial_stack_symbol;
+    char initial_stack;
     std::set<Transition> transitions;
 };
