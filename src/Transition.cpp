@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 
 #include "Transition.hpp"
 
@@ -9,4 +10,11 @@ Transition::Transition(std::string line) {
     line_stream >> stack_read;
     line_stream >> to_state;
     line_stream >> stack_write;
+}
+
+std::ostream& operator<<(std::ostream& out, const Transition& transition) {
+    out << "{" << transition.from_state << ", " << transition.input_read << ", "
+              << transition.stack_read << ", " << transition.to_state << ", " 
+              << transition.stack_write << "}";
+    return out; 
 }

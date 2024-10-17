@@ -2,12 +2,14 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 #include "Transition.hpp"
 
 class StackAutomaton {
 public:
     StackAutomaton(std::string declaration);
+    bool solve(std::string word) const;
 
 private:
     std::set<std::string> states;
@@ -15,5 +17,5 @@ private:
     std::set<char> stack_symbols;
     std::string initial_state;
     char initial_stack;
-    std::set<Transition> transitions;
+    std::vector<Transition> transitions;
 };

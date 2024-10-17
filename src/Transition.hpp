@@ -6,6 +6,8 @@ class Transition {
 public:
     Transition(std::string line);
 
+    friend std::ostream& operator<<(std::ostream& out, const Transition& transition);
+
 private:
     std::string from_state;
     char input_read;
