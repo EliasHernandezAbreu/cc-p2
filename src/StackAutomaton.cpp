@@ -50,6 +50,27 @@ StackAutomaton::StackAutomaton(std::string declaration) {
         transitions.push_back(transition);
     }
 
+    if (states.find(initial_state) == states.end())
+        throw std::runtime_error("Initial state not in states");
+    if (stack_symbols.find(initial_stack) == stack_symbols.end())
+        throw std::runtime_error("Initial stack symbol not in stack symbol set");
+    for (Transition tr : transitions) {
+        if (states.find(tr.get_from_state()) == states.end())
+            throw std::runtime_error("Transition initial state not in states");
+        if (states.find(tr.get_to_state()) == states.end())
+            throw std::runtime_error("Transition final state not in states");
+        if (input_symbols.find(tr.get_input_read()) == input_symbols.end() && tr.get_input_read() != '.')
+            throw std::runtime_error("Transition input read not in input symbols");
+        if (stack_symbols.find(tr.get_stack_read()) == stack_symbols.end())
+            throw std::runtime_error("Transition stack read not in stack symbols");
+        if (tr.get_stack_write() != ".") {
+            for (char c : tr.get_stack_write()) {
+                if (stack_symbols.find(tr.get_stack_read()) == stack_symbols.end())
+                    throw std::runtime_error("Transition stack write symbol not in stack symbols");
+            }
+        }
+    }
+
 
     std::cout << "Reading correct? " << states_stream.eof() << input_symbols_stream.eof() << stack_symbols_stream.eof()
               << initial_state_stream.eof() << (initial_stack_line.size() == 1) << "\n";
@@ -65,6 +86,34 @@ StackAutomaton::StackAutomaton(std::string declaration) {
     printf("]\n");
 }
 
+std::vector<int> StackAutomaton::getPossibleTransitions(std::string state, std::string word, std::string stack) const {
+}
+
 bool StackAutomaton::solve(std::string word) const {
-    return true;
+    std::stack<StackAutomatonRuntime> runtime_stack;
+    std::string initial_stack_str(1, initial_stack);
+    std::vector<int> possible_next_transitions = getPossibleTransitions(initial_state, word, initial_stack_str);
+    StackAutomatonRuntime runtime;
+    runtime.current_state = initial_state;
+    runtime.word = word;
+    runtime.stack = initial_stack_str;
+    for (int i : possible_next_transitions) {
+        runtime.next_transition = i;
+        runtime_stack.push(runtime);
+    }
+
+    while (!runtime_stack.empty()) {
+        StackAutomatonRuntime current_runtime = runtime_stack.top();
+        runtime_stack.pop();
+        for (int t : possible_next_transitions) {
+            Transition transition = transitions[t];
+            runtime.current_state = transition.get_to_state();
+            runtime.word = word;
+            runtime.next_transition = t;
+            runtime.stack = initial_stack_str;
+            runtime_stack.push(runtime);
+        }
+    }
+
+    return false;
 }

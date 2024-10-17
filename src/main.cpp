@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 
 #include "StackAutomaton.hpp"
 
@@ -30,7 +31,11 @@ int main (int argc, char *argv[]) {
     file_contents_buf << input.rdbuf();
     std::string file_contents = file_contents_buf.str();
 
-    StackAutomaton automaton(file_contents);
+    try {
+        StackAutomaton automaton(file_contents);
+    } catch (std::runtime_error e) {
+        printf("%s\n", e.what());
+    }
 
     return 0;
 }
