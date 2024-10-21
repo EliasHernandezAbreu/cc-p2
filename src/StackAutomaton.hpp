@@ -16,10 +16,11 @@ typedef struct StackAutomatonRuntime {
 class StackAutomaton {
 public:
     StackAutomaton(std::string declaration);
-    std::vector<int> getPossibleTransitions(std::string state, std::string word, std::string stack) const;
-    bool solve(std::string word) const;
+    bool solve(std::string word, bool trace) const;
 
 private:
+    std::vector<int> getPossibleTransitions(std::string state, std::string word, std::string stack) const;
+
     std::set<std::string> states;
     std::set<char> input_symbols;
     std::set<char> stack_symbols;

@@ -86,10 +86,8 @@ StackAutomaton::StackAutomaton(std::string declaration) {
     printf("]\n");
 }
 
-std::vector<int> StackAutomaton::getPossibleTransitions(std::string state, std::string word, std::string stack) const {
-}
-
-bool StackAutomaton::solve(std::string word) const {
+bool StackAutomaton::solve(std::string word, bool trace) const {
+    // Add initial transitions to the stack
     std::stack<StackAutomatonRuntime> runtime_stack;
     std::string initial_stack_str(1, initial_stack);
     std::vector<int> possible_next_transitions = getPossibleTransitions(initial_state, word, initial_stack_str);
@@ -102,18 +100,81 @@ bool StackAutomaton::solve(std::string word) const {
         runtime_stack.push(runtime);
     }
 
+    // Try each trantition in fi-lo order (stack)
+    if (trace)
+        printf("%10s | %10s | %10s | %15s\n\n", "State", "Word", "Stack", "Transitions");
+    if (trace) {
+        std::stringstream pnt_str;
+        bool first = true;
+        for (int pnt : possible_next_transitions) {
+            if (!first) pnt_str << ", ";
+            pnt_str << pnt;
+            first = false;
+        }
+        printf("%10s | %10s | %10s | %15s\n",
+               initial_state.c_str(), word.c_str(),
+               initial_stack_str.c_str(), pnt_str.str().c_str());
+    }
+
     while (!runtime_stack.empty()) {
         StackAutomatonRuntime current_runtime = runtime_stack.top();
         runtime_stack.pop();
-        for (int t : possible_next_transitions) {
-            Transition transition = transitions[t];
-            runtime.current_state = transition.get_to_state();
-            runtime.word = word;
-            runtime.next_transition = t;
-            runtime.stack = initial_stack_str;
+
+        // Take transition
+        Transition t = transitions[current_runtime.next_transition];
+        std::string current_word;
+        std::string current_stack;
+        std::string current_state;
+        if (t.get_input_read() != '.') current_word = current_runtime.word.erase(0, 1);
+        else current_word = current_runtime.word;
+        current_stack = current_runtime.stack.erase(0, 1);
+        if (t.get_stack_write() != ".")
+            current_stack.insert(current_stack.begin(), t.get_stack_write().begin(), t.get_stack_write().end());
+        current_state = t.get_to_state();
+        if (current_stack.empty() && current_word.empty()) {
+            if (!trace) return true;
+            // stack is empty so there cant be any transitions
+            printf("%10s | %10s | %10s | %15s\n",
+                   current_state.c_str(), current_word.c_str(),
+                   current_stack.c_str(), "");
+            return true;
+        }
+
+        // Get next transitions and add them to the stack
+        possible_next_transitions = getPossibleTransitions(current_state, current_word, current_stack); 
+        for (int t_index : possible_next_transitions) {
+            Transition transition = transitions[t_index];
+            runtime.current_state = current_state;
+            runtime.word = current_word;
+            runtime.next_transition = t_index;
+            runtime.stack = current_stack;
             runtime_stack.push(runtime);
         }
+
+        // Print trace
+        if (!trace) continue;
+        std::stringstream pnt_str;
+        bool first = true;
+        for (int pnt : possible_next_transitions) {
+            if (!first) pnt_str << ", ";
+            pnt_str << pnt;
+            first = false;
+        }
+        printf("%10s | %10s | %10s | %15s\n",
+               current_state.c_str(), current_word.c_str(),
+               current_stack.c_str(), pnt_str.str().c_str());
     }
 
     return false;
+}
+
+std::vector<int> StackAutomaton::getPossibleTransitions(std::string state, std::string word, std::string stack) const {
+    std::vector<int> possible_transitions;
+    for (int i = 0; i < transitions.size(); i++) {
+        Transition t = transitions[i];
+        if (t.get_from_state() == state &&
+            (t.get_input_read() == word[0] || t.get_input_read() == '.') &&
+            t.get_stack_read() == stack[0]) possible_transitions.push_back(i);
+    }
+    return possible_transitions;
 }

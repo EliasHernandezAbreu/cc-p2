@@ -8,6 +8,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -33,6 +34,15 @@ int main (int argc, char *argv[]) {
 
     try {
         StackAutomaton automaton(file_contents);
+        std::string word = "";
+        std::cout << "Enter a word to analyse: ";
+        while (std::cin >> word) {
+            bool belongs = automaton.solve(word, true);
+            if (belongs) printf("The word %s belongs\n", word.c_str());
+            else printf("The word %s does NOT belong\n", word.c_str());
+            std::cout << "Enter a word to analyse: ";
+        }
+
     } catch (std::runtime_error e) {
         printf("%s\n", e.what());
     }
