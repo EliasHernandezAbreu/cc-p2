@@ -1,3 +1,11 @@
+/**
+ * Complejidad Computacional
+ * Practica 2 - Automata de pila
+ * 
+ * @author Elías Hernández Abreu
+ * @brief Automaton definition
+ */
+
 #include <cstdio>
 #include <iostream>
 #include <string>
@@ -5,6 +13,9 @@
 #include <regex>
 
 #include "StackAutomaton.hpp"
+
+// #define LOG
+#define LOG_FORMAT "%10s | %10s | %10s | %10s | %10s | %15s\n"
 
 StackAutomaton::StackAutomaton(std::string declaration) {
     std::stringstream declaration_stream;
@@ -72,6 +83,7 @@ StackAutomaton::StackAutomaton(std::string declaration) {
     }
 
 
+#ifdef LOG
     std::cout << "Reading correct? " << states_stream.eof() << input_symbols_stream.eof() << stack_symbols_stream.eof()
               << initial_state_stream.eof() << (initial_stack_line.size() == 1) << "\n";
     printf("states: [ ");
@@ -84,9 +96,12 @@ StackAutomaton::StackAutomaton(std::string declaration) {
     printf("initial stack: %c\ntransitions: [\n", initial_stack);
     for (Transition t : transitions) std::cout << t << "\n";
     printf("]\n");
+#endif
 }
 
 bool StackAutomaton::solve(std::string word, bool trace) const {
+    if (!wordBelongs(word)) return false;
+
     // Add initial transitions to the stack
     std::stack<StackAutomatonRuntime> runtime_stack;
     std::string initial_stack_str(1, initial_stack);
@@ -95,6 +110,7 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
     runtime.current_state = initial_state;
     runtime.word = word;
     runtime.stack = initial_stack_str;
+    runtime.iteration = 1; // current is 0
     for (int i : possible_next_transitions) {
         runtime.next_transition = i;
         runtime_stack.push(runtime);
@@ -102,7 +118,7 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
 
     // Try each trantition in fi-lo order (stack)
     if (trace)
-        printf("%10s | %10s | %10s | %15s\n\n", "State", "Word", "Stack", "Transitions");
+        printf(LOG_FORMAT "\n", "Iteration", "Tr. taken", "State", "Word", "Stack", "Transitions");
     if (trace) {
         std::stringstream pnt_str;
         bool first = true;
@@ -111,11 +127,11 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
             pnt_str << pnt;
             first = false;
         }
-        printf("%10s | %10s | %10s | %15s\n",
-               initial_state.c_str(), word.c_str(),
+        printf(LOG_FORMAT, "0", "-", initial_state.c_str(), word.c_str(),
                initial_stack_str.c_str(), pnt_str.str().c_str());
     }
 
+    // Take runtimes from stack
     while (!runtime_stack.empty()) {
         StackAutomatonRuntime current_runtime = runtime_stack.top();
         runtime_stack.pop();
@@ -134,7 +150,8 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
         if (current_stack.empty() && current_word.empty()) {
             if (!trace) return true;
             // stack is empty so there cant be any transitions
-            printf("%10s | %10s | %10s | %15s\n",
+            printf(LOG_FORMAT, std::to_string(current_runtime.iteration).c_str(),
+                   std::to_string(current_runtime.next_transition).c_str(),
                    current_state.c_str(), current_word.c_str(),
                    current_stack.c_str(), "");
             return true;
@@ -148,6 +165,7 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
             runtime.word = current_word;
             runtime.next_transition = t_index;
             runtime.stack = current_stack;
+            runtime.iteration = current_runtime.iteration + 1;
             runtime_stack.push(runtime);
         }
 
@@ -160,12 +178,20 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
             pnt_str << pnt;
             first = false;
         }
-        printf("%10s | %10s | %10s | %15s\n",
+        printf(LOG_FORMAT, std::to_string(current_runtime.iteration).c_str(),
+               std::to_string(current_runtime.next_transition).c_str(),
                current_state.c_str(), current_word.c_str(),
                current_stack.c_str(), pnt_str.str().c_str());
     }
 
     return false;
+}
+
+bool StackAutomaton::wordBelongs(std::string word) const {
+    for (char c : word) {
+        if (input_symbols.find(c) == input_symbols.end()) return false;
+    }
+    return true;
 }
 
 std::vector<int> StackAutomaton::getPossibleTransitions(std::string state, std::string word, std::string stack) const {
