@@ -16,6 +16,7 @@
 
 // #define LOG
 #define LOG_FORMAT "%10s | %10s | %10s | %10s | %10s | %15s\n"
+#define MAX_ITERATIONS 100
 
 StackAutomaton::StackAutomaton(std::string declaration) {
     std::stringstream declaration_stream;
@@ -155,6 +156,15 @@ bool StackAutomaton::solve(std::string word, bool trace) const {
                    current_state.c_str(), current_word.c_str(),
                    current_stack.c_str(), "");
             return true;
+        }
+
+        // End this branch if too many iterations in it
+        if (current_runtime.iteration >= MAX_ITERATIONS) {
+            if (!trace) continue;
+            printf(LOG_FORMAT, std::to_string(current_runtime.iteration).c_str(),
+                   std::to_string(current_runtime.next_transition).c_str(),
+                   current_state.c_str(), current_word.c_str(),
+                   current_stack.c_str(), "stop");
         }
 
         // Get next transitions and add them to the stack
