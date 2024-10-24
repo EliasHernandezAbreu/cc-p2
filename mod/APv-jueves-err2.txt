@@ -1,0 +1,17 @@
+# A^nB^mC^k / n >= 0, m >= 0, k >= n+m
+# Automata por vaciado de pila 
+# epsilon esta representado por un .
+p q r
+A B C
+X y
+p
+S
+p A X p yX
+p A y p yy
+p B y q yy
+p B X q yX
+q B y q yy
+q C y r .
+r C X r X
+r C y r .
+r . X r .
